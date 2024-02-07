@@ -1,6 +1,7 @@
 {
   "name": "@agoda-com/test-metrics",
   "description": "Library to collect test metrics",
+  "version": "0.0.21",
   "main": "jest/index.js",
   "playwright": "playwright/index.js",
   "license": "MIT",
