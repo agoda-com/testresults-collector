@@ -16,7 +16,7 @@ jest.mock('form-data');
 const metaData: IMetadata = {
   branch: 'main',
   projectName: 'project',
-  repository: 'https://gitlab.agodadev.io/example/project',
+  repository: 'https://github.com/example/project',
   repositoryName: 'project',
   hostname: 'hostname',
   username: 'username',
