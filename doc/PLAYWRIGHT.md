@@ -12,4 +12,4 @@ In case your client package.json has playwright like this
 ```
 
 here is sample playwright.config.ts file
-<link>
+https://github.com/agoda-com/testresults-collector/blob/master/doc/playwright.config.ts
