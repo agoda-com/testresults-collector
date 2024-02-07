@@ -44,14 +44,14 @@ describe('getMetadata', () => {
         testRunner: 'jest',
         testRunnerVersion: '28.5.0',
         cpuCount: 0,
-        id: '1658821493_1'
+        id: uuidv4() // '1658821493_1'
     };
 
     test('should return the correct metadata with mocked dependencies', () => {
         const username = 'username';
         const sha = 'ffac537e6cbbf934b08745a378932722df287a53';
         const branch = 'master';
-        const runid = '1658821493';
+        // const runid = '1658821493';
         mockedChildProcess.spawnSync.mockReturnValueOnce({
             stdout: Buffer.from(branch),
         } as mockSpawnSyncReturns);
@@ -79,7 +79,7 @@ describe('getMetadata', () => {
             GITHUB_TRIGGERING_ACTOR: username,
             GITHUB_SHA: sha,
             GITHUB_REF_NAME: branch,
-            GITHUB_RUN_ID: runid
+            GITHUB_RUN_ID: undefined // runid
         };
         const actualMetadata:IMetadata = getMetadata('jest');
         expect(actualMetadata).toEqual(expectedMetadata);
