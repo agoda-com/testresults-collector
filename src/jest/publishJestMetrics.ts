@@ -3,9 +3,7 @@ import getMetadata from '../common/getMetadata';
 import { IMetadata, IJestTestResults } from '../common/types';
 
 function publishJestMetrics(result: any) {
-    const JEST_TESTDATA_API_URL: string = process.env.JEST_TESTDATA_API_URL
-        ? process.env.JEST_TESTDATA_API_URL
-        : 'http://your_domain/your_jest_api'; // TODO change to your api endpoint
+    const JEST_TESTDATA_API_URL: string = process.env.JEST_TESTDATA_API_URL ?? '<unknown>'; // your api endpoint eg. 'http://your_domain/jest'
 
     const metadata: IMetadata = getMetadata('jest');
     const payload: IJestTestResults = {
