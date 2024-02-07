@@ -31,38 +31,42 @@ describe('getMetadata', () => {
       });
 
     const expectedMetadata:IMetadata = {
-        branch: 'main',
+        branch: 'master',
         projectName: 'project',
-        repository: 'https://gitlab.agodadev.io/example/project',
+        repository: 'https://github.com/example/project',
         repositoryName: 'project',
         hostname: 'hostname',
         username: 'username',
         os: 'os.type',
         osVersion: 'os.version',
         gitCommitDate: '2023-06-08T14:10:34.000+07:00',
-        gitHeadCommit: 'abcdef1234567890',
+        gitHeadCommit: 'ffac537e6cbbf934b08745a378932722df287a53',
         testRunner: 'jest',
         testRunnerVersion: '28.5.0',
         cpuCount: 0,
-        id: uuidv4()
+        id: uuidv4() // '1658821493_1'
     };
 
     test('should return the correct metadata with mocked dependencies', () => {
+        const username = 'username';
+        const sha = 'ffac537e6cbbf934b08745a378932722df287a53';
+        const branch = 'master';
+        // const runid = '1658821493';
         mockedChildProcess.spawnSync.mockReturnValueOnce({
-            stdout: Buffer.from('main'),
+            stdout: Buffer.from(branch),
         } as mockSpawnSyncReturns);
         mockedChildProcess.spawnSync.mockReturnValueOnce({
-            stdout: Buffer.from('https://gitlab.agodadev.io/example/project'),
+            stdout: Buffer.from('https://github.com/example/project'),
         } as mockSpawnSyncReturns);
         mockedChildProcess.spawnSync.mockReturnValueOnce({
             stdout: Buffer.from('1686208234'),
         } as mockSpawnSyncReturns);
         mockedChildProcess.spawnSync.mockReturnValueOnce({
-            stdout: Buffer.from('abcdef1234567890'),
+            stdout: Buffer.from(sha),
         } as mockSpawnSyncReturns);
 
         mockedOs.hostname.mockReturnValue('hostname');
-        mockedOs.userInfo.mockReturnValue({username: 'username', uid: 0, gid: 0, shell: 'shell', homedir: 'homedir'});
+        mockedOs.userInfo.mockReturnValue({username: username, uid: 0, gid: 0, shell: 'shell', homedir: 'homedir'});
         mockedOs.type.mockReturnValue('os.type');
         mockedOs.release.mockReturnValue('os.version');
         mockedOs.cpus.mockReturnValue([]);
@@ -72,10 +76,10 @@ describe('getMetadata', () => {
         const originalProcessEnv = process.env;
         process.env = {
             ...originalProcessEnv,
-            GITLAB_USER_LOGIN: 'username',
-            CI_COMMIT_SHA: 'abcdef1234567890',
-            CI_COMMIT_REF_NAME: 'main',
-            CI_JOB_ID: '7288638f-4cb5-4a0b-8f47-ab965562b7e5'
+            GITHUB_TRIGGERING_ACTOR: username,
+            GITHUB_SHA: sha,
+            GITHUB_REF_NAME: branch,
+            GITHUB_RUN_ID: undefined // runid
         };
         const actualMetadata:IMetadata = getMetadata('jest');
         expect(actualMetadata).toEqual(expectedMetadata);
@@ -93,10 +97,10 @@ describe('getMetadata', () => {
         const originalProcessEnv = process.env;
         process.env = {
             ...originalProcessEnv,
-            GITLAB_USER_LOGIN: undefined,
-            CI_COMMIT_SHA: undefined,
-            CI_COMMIT_REF_NAME: undefined,
-            CI_JOB_ID: undefined
+            GITHUB_TRIGGERING_ACTOR: undefined,
+            GITHUB_SHA: undefined,
+            GITHUB_REF_NAME: undefined,
+            GITHUB_RUN_ID: undefined
         };
 
         // @ts-ignore: spawnSync actually returned with `stdout` as null when the command is invalid
