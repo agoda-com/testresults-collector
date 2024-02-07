@@ -24,9 +24,7 @@ class PublishLocalPlaywrightMetrics implements Reporter {
     if (!this.junitOutputFile) {
       return;
     }
-    const PLAYWRIGHT_TESTDATA_API_URL: string = process.env.PLAYWRIGHT_TESTDATA_API_URL
-        ? process.env.PLAYWRIGHT_TESTDATA_API_URL
-        : 'http://your_domain/testdata/junit'; // TODO change to your api endpoint
+    const PLAYWRIGHT_TESTDATA_API_URL: string = process.env.PLAYWRIGHT_TESTDATA_API_URL ?? '<unknown>'; // your api endpoint eg. 'http://your_domain/testdata/junit'
     const formdata = new FormData();
     Object.entries(getMetadata("playwright")).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {

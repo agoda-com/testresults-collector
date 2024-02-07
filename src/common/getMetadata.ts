@@ -59,15 +59,18 @@ function getMetadata(runner: string): IMetadata {
     if (repoName?.endsWith('.git')) {
         repoName = repoName?.substring(0, repoName?.lastIndexOf('.'));
     }
-    const ci_unique_run_id = process.env.GITHUB_RUN_ID?.concat('_').concat(process.env.GITHUB_RUN_NUMBER || '1');
+    // to support both gitlab and github
+    const ciJobId = process.env.CI_JOB_ID || process.env.GITHUB_RUN_ID?.concat('_').concat(process.env.GITHUB_RUN_NUMBER || '1');
+    const branch = process.env.CI_COMMIT_REF_NAME || process.env.GITHUB_REF_NAME;
+    const username = process.env.GITLAB_USER_LOGIN || process.env.GITHUB_TRIGGERING_ACTOR;
 
     return {
-        branch: process.env.GITHUB_REF_NAME || gitBranch,
+        branch: branch || gitBranch,
         projectName: repoName,
         repository: gitProjectUrl,
         repositoryName: repoName,
         hostname: os.hostname(),
-        username: process.env.GITHUB_TRIGGERING_ACTOR || (userInfo ? userInfo.username : null),
+        username: username || (userInfo ? userInfo.username : null),
         os: os.type(),
         osVersion: os.release(),
         gitCommitDate: gitCommitDate ? gitCommitDate.toISO() : null,
@@ -75,7 +78,7 @@ function getMetadata(runner: string): IMetadata {
         testRunner: runner,
         testRunnerVersion: testRunnerVersion,
         cpuCount: os.cpus().length,
-        id: ci_unique_run_id || uuid4()
+        id: ciJobId || uuid4()
     };
 }
 
