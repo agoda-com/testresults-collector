@@ -55,10 +55,6 @@ export const getCommonMetadata = (
   };
 };
 
-const ENDPOINT_FROM_TYPE = {
-  vitest: process.env.VITEST_TESTDATA_API_URL ?? UNKNOWN_VALUE, // your api endpoint eg. http://your_domain/vitest
-};
-
 const LOG_FILE = 'devfeedback.log';
 
 const sendData = async (endpoint: string, data: CommonMetadata): Promise<boolean> => {
@@ -71,7 +67,7 @@ const sendData = async (endpoint: string, data: CommonMetadata): Promise<boolean
 };
 
 export const sendTestData = async (testData: VitestTestData) => {
-  const endpoint = ENDPOINT_FROM_TYPE[testData.type];
+  const endpoint = process.env.VITEST_TESTDATA_API_URL ?? UNKNOWN_VALUE; // your api endpoint eg. http://your_domain/vitest
 
   console.log(`Your test time was ${testData.timeTaken.toFixed(2)}ms.`);
 
