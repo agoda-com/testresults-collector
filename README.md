@@ -103,5 +103,8 @@ if the version is not updated, delete node_modules folder and reinstall
 
 The idea is you can publish the new version using `release` job on CI. 
 
-# for playwright
+## for playwright
 please read doc/PLAYWRIGHT.md
+
+## for vitest 
+please read doc/VITEST.md
