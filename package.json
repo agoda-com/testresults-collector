@@ -1,7 +1,7 @@
 {
   "name": "agoda-test-metrics",
   "description": "Library to collect test metrics",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "repository": "https://github.com/agoda-com/testresults-collector.git",
   "main": "jest/index.js",
   "playwright": "playwright/index.js",
