@@ -11,7 +11,7 @@ This package also supports collecting the test data of projects that are using V
 If you use **Vitest**, you can add the following to your `vitest.config.js` file:
 
 ```javascript
-import { VitestTestDataPlugin } from '@agoda-com/test-metrics'
+import { VitestTestDataPlugin } from 'agoda-test-metrics'
 
 export default defineConfig({
   ...,

@@ -42,7 +42,7 @@ class PublishLocalPlaywrightMetrics implements Reporter {
       });
       console.log(`Playwright Test results from ${this.junitOutputFile} successfully posted to ${PLAYWRIGHT_TESTDATA_API_URL}`);
     } catch (error) {
-      console.error(`Failed posting Playwright test Results - ${this.junitOutputFile} to ${PLAYWRIGHT_TESTDATA_API_URL} from @agoda-com/test-metrics`);
+      console.error(`Failed posting Playwright test Results - ${this.junitOutputFile} to ${PLAYWRIGHT_TESTDATA_API_URL} from agoda-test-metrics`);
     }
   }
 }

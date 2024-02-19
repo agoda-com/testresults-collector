@@ -24,11 +24,11 @@ An npm package that publishes test results object from testResultsProcessor(eg. 
 
 Firstly, client will need to install Test Results Collector package
 
-```npm install --save-dev @agoda-com/test-metrics```
+```npm install --save-dev agoda-test-metrics```
 
 Next, user will require to add `testResultsProcessor` key to jest config 
 
-`testResultsProcessor: '@agoda-com/test-metrics'`
+`testResultsProcessor: 'agoda-test-metrics'`
 
 Note: Jest config could be in either **package.json** OR **standalone file** (jest.config.js).
 
@@ -38,13 +38,13 @@ If there is jest section in `package.json`, simply add:
 ```{
   "name": "my-project",
   "jest": {
-    "testResultsProcessor": "@agoda-com/test-metrics",
+    "testResultsProcessor": "agoda-test-metrics",
   }
 }
 ```
 or if there is `jest.config.js`, simply add: 
 
-```"testResultsProcessor": "@agoda-com/test-metrics"```
+```"testResultsProcessor": "agoda-test-metrics"```
 
 ## API
 
@@ -95,7 +95,7 @@ After that, the data will be processed on API (and then this can be able to inje
 
 For testing, the idea is you can publish the beta version in the `release-beta` job on CI, and install the desired version to your repository using following command
 
-` npm install @agoda-com/test-metrics@<<beta version>> --force`
+` npm install agoda-test-metrics@<<beta version>> --force`
 
 if the version is not updated, delete node_modules folder and reinstall
 

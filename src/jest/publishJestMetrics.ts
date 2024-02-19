@@ -20,7 +20,7 @@ function publishJestMetrics(result: any) {
     }).then(_ => {
         console.log(`Jest Test results successfully posted to ${JEST_TESTDATA_API_URL}`);
     }).catch(error => {
-        console.error(`Failed posting Jest test Results to ${JEST_TESTDATA_API_URL} from @agoda-com/test-metrics`);
+        console.error(`Failed posting Jest test Results to ${JEST_TESTDATA_API_URL} from agoda-test-metrics`);
     });
     return result;
 }

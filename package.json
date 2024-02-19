@@ -1,5 +1,5 @@
 {
-  "name": "@agoda-com/test-metrics",
+  "name": "agoda-test-metrics",
   "description": "Library to collect test metrics",
   "version": "0.0.21",
   "repository": "https://github.com/agoda-com/testresults-collector.git",

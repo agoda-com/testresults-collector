@@ -11,7 +11,7 @@ const junit: ReporterDescription = [
         : path.join(__dirname,'playwright-report/junit.results.xml')
   }
 ]
-const testMetrics: ReporterDescription = ['@agoda-com/test-metrics/playwright']
+const testMetrics: ReporterDescription = ['agoda-test-metrics/playwright']
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
