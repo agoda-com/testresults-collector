@@ -1,110 +1,151 @@
-# Test Results Collector
+# agoda-test-metrics: Find Out What Your Tests Are Really Doing
 
-### What is it?
+An npm package that collects test run data from developer machines and CI, and posts it to an HTTP endpoint of your choosing. It supports:
 
-An npm package that publishes test results object from testResultsProcessor(eg. jest) to an HTTP endpoint
+- Jest (24.x to 30.x)
+- Playwright
+- Vitest
 
-## Objective
+It is part of the same family as [agoda-devfeedback](https://github.com/agoda-com/devfeedback-js), which does the same job for build times.
 
-- We want to collect test run data from local machines (Laptops) to analyze and help improve the developer experience. We should be able to correlate this with data from CI to look for common behavior that indicates poor local experience.
-- For example:
-    - People not running test on their local, pushing to CI for testing
-    - Specific test suites that only run on CI that people never run locally
-    - Test that take a long time to run locally when compare to CI, or both CI and local are long
-    - Tests that are repeatedly run on without code change to succeed, indicating flakiness (might be tricky)
+## Why Collect Local Test Data?
 
+CI tells you how your tests behave on a build agent. It tells you nothing about what happens on a laptop, which is where developers spend their day. This is part of the [F5 Experience](https://beerandserversdontmix.com/2024/08/15/an-introduction-to-the-f5-experience/): setup should be easy and the feedback loop should be fast.
 
-### How does it work?
+Once you have local and CI data side by side, you can look for patterns like:
 
-![alt text](image.png)
+- People not running tests locally and pushing to CI to find out if they pass
+- Test suites that only ever run on CI
+- Tests that take much longer locally than on CI, or that are slow in both
+- Tests that are re-run without a code change until they pass, which points to flakiness
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[Run tests] --> B[Test runner produces results]
+    B --> C[agoda-test-metrics adds machine and git metadata]
+    C --> D[HTTP POST to your endpoint]
+    D --> E[DX Telemetry Manager, or your own service]
+```
+
+The package only sends data. You need something to receive it.
+
+## Where the Data Goes
+
+The easy answer is [DX Telemetry Manager](https://github.com/agoda-com/Local-Dev-Telemetry-Manager). It is the server built for this family of libraries: it accepts the payloads from this package on `/jest`, `/testdata/junit` and `/vitest`, stores them in SQLite or PostgreSQL, and gives you a dashboard for test and build metrics. It ships as a Docker image:
+
+```bash
+docker run --rm -p 8080:8080 agoda/devex-telemetry:latest
+```
+
+It is meant to run inside your own network, not on the public internet. See its README for deployment options.
+
+You don't have to use it. Anything that accepts an HTTP POST will do, if you would rather send the data somewhere of your own.
+
+## Consuming the Data
+
+The data is sent to the following default endpoints (customizable via environment variable):
+
+| Test Runner | Default                                       | Environment Variable Override | Format                                                  |
+| ----------- | --------------------------------------------- | ----------------------------- | ------------------------------------------------------- |
+| Jest        | "<http://compilation-metrics/jest>"           | BUILD_METRICS_ES_ENDPOINT     | JSON                                                    |
+| Playwright  | "<http://compilation-metrics/testdata/junit>" | BUILD_METRICS_ES_ENDPOINT     | `multipart/form-data`, metadata fields plus a JUnit XML |
+| Vitest      | "<http://compilation-metrics/vitest>"         | BUILD_METRICS_ES_ENDPOINT     | JSON                                                    |
+
+`BUILD_METRICS_ES_ENDPOINT` is the same override the other libraries in the family use. It replaces the whole URL, not just the host.
+
+Pro tip: set up a CNAME on your internal DNS that points `compilation-metrics` at your DX Telemetry Manager deployment, and nobody has to configure anything. The same host name is the default for the other libraries in the family, so one DNS entry covers all of them.
+
+A failed POST never fails your test run. The error is logged and the run carries on.
 
 ## Getting Started
 
-### Usage
+```bash
+npm install --save-dev agoda-test-metrics
+```
 
-Firstly, client will need to install Test Results Collector package
+### Jest
 
-```npm install --save-dev agoda-test-metrics```
+Add the `testResultsProcessor` key to your Jest config, in `jest.config.js`:
 
-Next, user will require to add `testResultsProcessor` key to jest config 
+```javascript
+module.exports = {
+  // ... your other config ...
+  testResultsProcessor: 'agoda-test-metrics',
+};
+```
 
-`testResultsProcessor: 'agoda-test-metrics'`
+or in `package.json`:
 
-Note: Jest config could be in either **package.json** OR **standalone file** (jest.config.js).
-
-#### For example,
-
-If there is jest section in `package.json`, simply add:
-```{
+```json
+{
   "name": "my-project",
   "jest": {
-    "testResultsProcessor": "agoda-test-metrics",
+    "testResultsProcessor": "agoda-test-metrics"
   }
 }
 ```
-or if there is `jest.config.js`, simply add: 
 
-```"testResultsProcessor": "agoda-test-metrics"```
+### Playwright
 
-## API
+See [doc/PLAYWRIGHT.md](doc/PLAYWRIGHT.md).
 
-After include the package in your project, everytime when you run the test in local, the plugin will collect required data
+### Vitest
 
-1. User's metadata 
+See [doc/VITEST.md](doc/VITEST.md).
 
-| Metadata          | Data Type |
-|-------------------|---------|
-|branch| STRING  |
-|projectName| STRING  |
-|repository| STRING  |
-|repositoryName| STRING  |
-|hostname| STRING        |
-|username| STRING  |
-|os| STRING  |
-|osVersion| STRING  |
-|gitCommitDate| STRING  |
-|gitHeadCommit| STRING  |
-|testRunner| STRING  |
-|testRunnerVersion| STRING  |
-|cpuCount| NUMBER  |
+## What Gets Sent
 
-2.  Test Results (See [Test Results Schema](https://github.com/jestjs/jest/blob/6460335f88cee3dcb9d29c49d55ab02b9d83f994/packages/jest-test-result/src/types.ts))
+Every payload carries metadata about the machine and the repository:
 
+| Metadata          | Data Type | Notes                                         |
+| ----------------- | --------- | --------------------------------------------- |
+| id                | STRING    | CI job id on GitLab or GitHub, otherwise a UUID |
+| branch            | STRING    |                                               |
+| projectName       | STRING    |                                               |
+| repository        | STRING    | Credentials are stripped from the URL         |
+| repositoryName    | STRING    |                                               |
+| hostname          | STRING    |                                               |
+| username          | STRING    | CI user on GitLab or GitHub, otherwise the OS user |
+| os                | STRING    |                                               |
+| osVersion         | STRING    |                                               |
+| gitCommitDate     | STRING    |                                               |
+| gitHeadCommit     | STRING    |                                               |
+| testRunner        | STRING    |                                               |
+| testRunnerVersion | STRING    |                                               |
+| cpuCount          | NUMBER    |                                               |
 
-Then, it will post to [API]
+Plus the test results themselves:
 
-### Configuration
+- **Jest**: the results object Jest hands to a `testResultsProcessor`, as `testCaseSummary`. See the [Jest test result types](https://github.com/jestjs/jest/blob/6460335f88cee3dcb9d29c49d55ab02b9d83f994/packages/jest-test-result/src/types.ts).
+- **Playwright**: the JUnit XML file written by Playwright's `junit` reporter, attached as `files`.
+- **Vitest**: per-file and per-test-case timings and statuses. See [src/vitest/types.ts](src/vitest/types.ts).
 
-You can define an endpoint in the environment variable and the stats data will be sent there via HTTP POST Request
-
-| Environment Variable | Default Value |
-|----------|---------------|
-|JEST_TESTDATA_API_URL|http://your_api_domain/jest|
-
-
-
-
-## Test Data Schema
-
-After that, the data will be processed on API (and then this can be able to inject to Hadoop if you want to analyze later)
-
-
-
+Heads up: the payload includes the hostname and username of whoever ran the tests. Tell your developers before you roll it out.
 
 ## Development
 
-For testing, the idea is you can publish the beta version in the `release-beta` job on CI, and install the desired version to your repository using following command
+```bash
+npm ci
+npm run build
+npm test
+```
 
-` npm install agoda-test-metrics@<<beta version>> --force`
+To try a change in another repository before releasing it, build a tarball and install that:
 
-if the version is not updated, delete node_modules folder and reinstall
+```bash
+npm pack
+# then, in the consuming repository
+npm install --save-dev /path/to/agoda-test-metrics-<version>.tgz
+```
 
-## Publish 
+If the change does not show up, delete `node_modules` and install again.
 
-The idea is you can publish the new version using `release` job on CI. 
+## Publishing
 
-## for playwright
-please read doc/PLAYWRIGHT.md
+Bump the version in `package.json`, merge to `master`, then create a GitHub release. The release triggers the workflow that publishes to npm.
 
-## for vitest 
-please read doc/VITEST.md
+## Contributing
+
+Bug fixes, documentation and support for more test runners are all welcome. Open an issue or a pull request.

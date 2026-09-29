@@ -1,16 +1,30 @@
-# sample-code-reference-in-readme
+# Playwright Test Data
 
-In case your client package.json has playwright like this
+This package supports collecting the test data of projects that are using Playwright.
+
+## Usage
+
+The reporter posts the JUnit XML file that Playwright's own `junit` reporter writes, so you need both reporters in your `playwright.config.ts`:
+
+```typescript
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  // ... your other config ...
+  reporter: [
+    ['list'],
+    ['junit', { outputFile: 'results.xml' }],
+    ['agoda-test-metrics/playwright'],
+  ],
+});
 ```
-  "devDependencies": {
-    "agoda-test-metrics": "0.0.21",
-    "@axe-core/playwright": "^4.4.5",
-    "@playwright/test": "^1.30.1",
-    "dotenv": "^16.0.1",
-    "playwright": "^1.30.1",
-  }
-```
 
-here is sample playwright.config.ts file
+If the `junit` reporter is not configured, the reporter logs a message and skips sending.
 
-https://github.com/agoda-com/testresults-collector/blob/master/doc/playwright.config.ts
+There is a complete sample config in [playwright.config.ts](playwright.config.ts).
+
+## Configuration
+
+| Default                                       | Environment Variable Override |
+| --------------------------------------------- | ----------------------------- |
+| "<http://compilation-metrics/testdata/junit>" | BUILD_METRICS_ES_ENDPOINT     |
