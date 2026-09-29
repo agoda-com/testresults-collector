@@ -34,7 +34,7 @@ let expectedPayload: IJestTestResults = {
 jest.spyOn(getMetadata, 'default').mockReturnValue(metaData);
 
 const testEndpoint = 'http://localhost:5000/jest';
-process.env.JEST_TESTDATA_API_URL = testEndpoint;
+process.env.BUILD_METRICS_ES_ENDPOINT = testEndpoint;
 
 describe('publishJestMetrics', () => {
     beforeEach(() => {

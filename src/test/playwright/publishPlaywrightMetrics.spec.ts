@@ -30,8 +30,8 @@ const metaData: IMetadata = {
   id: '7288638f-4cb5-4a0b-8f47-ab965562b7e5'
 };
 jest.spyOn(getMetadata, 'default').mockReturnValue(metaData);
-const testEndpoint = process.env.PLAYWRIGHT_TESTDATA_API_URL || 'http://localhost:5000/testdata/junit';
-process.env.PLAYWRIGHT_TESTDATA_API_URL = testEndpoint;
+const testEndpoint = process.env.BUILD_METRICS_ES_ENDPOINT || 'http://localhost:5000/testdata/junit';
+process.env.BUILD_METRICS_ES_ENDPOINT = testEndpoint;
 
 jest.mock('fs', () => {
   const originalFs = jest.requireActual('fs');

@@ -1,9 +1,10 @@
 import axios from 'axios';
 import getMetadata from '../common/getMetadata';
+import getEndpoint from '../common/getEndpoint';
 import { IMetadata, IJestTestResults } from '../common/types';
 
 function publishJestMetrics(result: any) {
-    const JEST_TESTDATA_API_URL: string = process.env.JEST_TESTDATA_API_URL ?? '<unknown>'; // your api endpoint eg. 'http://your_domain/jest'
+    const endpoint: string = getEndpoint('jest');
 
     const metadata: IMetadata = getMetadata('jest');
     const payload: IJestTestResults = {
@@ -11,16 +12,16 @@ function publishJestMetrics(result: any) {
         testCaseSummary: result,
     };
 
-    axios.post(JEST_TESTDATA_API_URL, payload, {
+    axios.post(endpoint, payload, {
         headers: {
             'Content-Type': 'application/json',
             'accept': '*/*',
         },
         timeout: 30000,
     }).then(_ => {
-        console.log(`Jest Test results successfully posted to ${JEST_TESTDATA_API_URL}`);
+        console.log(`Jest Test results successfully posted to ${endpoint}`);
     }).catch(error => {
-        console.error(`Failed posting Jest test Results to ${JEST_TESTDATA_API_URL} from agoda-test-metrics`);
+        console.error(`Failed posting Jest test Results to ${endpoint} from agoda-test-metrics`);
     });
     return result;
 }

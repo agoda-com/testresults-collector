@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as fs from 'fs';
 import getMetadata from '../common/getMetadata';
+import getEndpoint from '../common/getEndpoint';
 import FormData from 'form-data';
 import type {
   Reporter, FullConfig
@@ -24,7 +25,7 @@ class PublishLocalPlaywrightMetrics implements Reporter {
     if (!this.junitOutputFile) {
       return;
     }
-    const PLAYWRIGHT_TESTDATA_API_URL: string = process.env.PLAYWRIGHT_TESTDATA_API_URL ?? '<unknown>'; // your api endpoint eg. 'http://your_domain/testdata/junit'
+    const endpoint: string = getEndpoint('playwright');
     const formdata = new FormData();
     Object.entries(getMetadata("playwright")).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
@@ -33,16 +34,16 @@ class PublishLocalPlaywrightMetrics implements Reporter {
       formdata.append('files', fs.createReadStream(this.junitOutputFile));
     });
     try {
-      await axios.post(PLAYWRIGHT_TESTDATA_API_URL, formdata, {
+      await axios.post(endpoint, formdata, {
         headers: {
           "Content-Type": "multipart/form-data",
           "accept": 'application/json'
         },
         timeout: 30000
       });
-      console.log(`Playwright Test results from ${this.junitOutputFile} successfully posted to ${PLAYWRIGHT_TESTDATA_API_URL}`);
+      console.log(`Playwright Test results from ${this.junitOutputFile} successfully posted to ${endpoint}`);
     } catch (error) {
-      console.error(`Failed posting Playwright test Results - ${this.junitOutputFile} to ${PLAYWRIGHT_TESTDATA_API_URL} from agoda-test-metrics`);
+      console.error(`Failed posting Playwright test Results - ${this.junitOutputFile} to ${endpoint} from agoda-test-metrics`);
     }
   }
 }
