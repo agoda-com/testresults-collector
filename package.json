@@ -1,7 +1,7 @@
 {
   "name": "agoda-test-metrics",
   "description": "Library to collect test metrics",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "repository": "https://github.com/agoda-com/testresults-collector.git",
   "main": "jest/index.js",
   "playwright": "playwright/index.js",
@@ -28,8 +28,8 @@
     "vitest": "^0.33.0"
   },
   "peerDependencies": {
-    "jest": "24.x - 29.x",
-    "jest-junit": "14.x - 16.x",
+    "jest": "24.x - 30.x",
+    "jest-junit": "14.x - 17.x",
     "typescript": "^3.7.x || ^4.3.x || ^5.x",
     "vitest": "^0.0.0"
   },
