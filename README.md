@@ -26,10 +26,22 @@ flowchart LR
     A[Run tests] --> B[Test runner produces results]
     B --> C[agoda-test-metrics adds machine and git metadata]
     C --> D[HTTP POST to your endpoint]
-    D --> E[Store and analyse however you like]
+    D --> E[DX Telemetry Manager, or your own service]
 ```
 
-The package only sends data. What receives it is up to you: anything that accepts an HTTP POST will do.
+The package only sends data. You need something to receive it.
+
+## Where the Data Goes
+
+The easy answer is [DX Telemetry Manager](https://github.com/agoda-com/Local-Dev-Telemetry-Manager). It is the server built for this family of libraries: it accepts the payloads from this package on `/jest`, `/testdata/junit` and `/vitest`, stores them in SQLite or PostgreSQL, and gives you a dashboard for test and build metrics. It ships as a Docker image:
+
+```bash
+docker run --rm -p 8080:8080 agoda/devex-telemetry:latest
+```
+
+It is meant to run inside your own network, not on the public internet. See its README for deployment options.
+
+You don't have to use it. Anything that accepts an HTTP POST will do, if you would rather send the data somewhere of your own.
 
 ## Consuming the Data
 
@@ -43,7 +55,7 @@ The data is sent to the following default endpoints (customizable via environmen
 
 `BUILD_METRICS_ES_ENDPOINT` is the same override the other libraries in the family use. It replaces the whole URL, not just the host.
 
-Pro tip: set up a CNAME on your internal DNS for `compilation-metrics` and nobody has to configure anything. The same host name is the default for the other libraries in the family, so one DNS entry covers all of them.
+Pro tip: set up a CNAME on your internal DNS that points `compilation-metrics` at your DX Telemetry Manager deployment, and nobody has to configure anything. The same host name is the default for the other libraries in the family, so one DNS entry covers all of them.
 
 A failed POST never fails your test run. The error is logged and the run carries on.
 
