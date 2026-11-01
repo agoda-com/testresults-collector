@@ -21,21 +21,26 @@ export interface CommonMetadata {
   customIdentifier: string | null;
 }
 
+/**
+ * Status as sent to the server. Kept in the Vitest 0.x task-state vocabulary
+ * (`pass`, `fail`, ...) that the server already stores.
+ */
+export type VitestStatus = 'run' | 'skip' | 'todo' | 'pass' | 'fail';
 
 export interface VitestTestFile {
   name: string;
-  collectDuration: number | null;
-  setupDuration: number | null;
-  prepareDuration: number | null;
-  environmentLoad: number | null;
-  status: 'run' | 'skip' | 'only' | 'todo' | 'pass' | 'fail' | null;
+  collectDuration: number;
+  setupDuration: number;
+  prepareDuration: number;
+  environmentLoad: number;
+  status: VitestStatus;
   startTime: number;
   duration: number;
 }
 
 export interface VitestTestCase {
   name: string;
-  status: 'run' | 'skip' | 'only' | 'todo' | 'pass' | 'fail' | null;
+  status: VitestStatus;
   errorMessage: string[] | null;
   startTime: number;
   duration: number;
@@ -44,8 +49,8 @@ export interface VitestTestCase {
 
 export interface VitestTestData extends CommonMetadata {
   type: 'vitest';
-  vitestVersion: string | null;
-  mode: 'test' | 'benchmark' | 'typecheck';
+  vitestVersion: string;
+  mode: string;
   maxConcurrency: number;
   watchMode: boolean;
   testEnvironment: string;

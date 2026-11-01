@@ -1,14 +1,8 @@
-import type {
-  CommonMetadata,
-  VitestTestData,
-} from './types';
+import type { CommonMetadata } from './types';
 import { v1 as uuidv1 } from 'uuid';
 import os from 'os';
-import fs from 'fs';
 import { spawnSync } from 'child_process';
 import safelyTry from 'safely-try';
-import axios from 'axios';
-import getEndpoint from '../common/getEndpoint';
 
 const UNKNOWN_VALUE = '<unknown>';
 
@@ -54,31 +48,4 @@ export const getCommonMetadata = (
     commitSha: runGitCommand(['rev-parse', 'HEAD']) ?? UNKNOWN_VALUE,
     customIdentifier: customIdentifier,
   };
-};
-
-const LOG_FILE = 'devfeedback.log';
-
-const sendData = async (endpoint: string, data: CommonMetadata): Promise<boolean> => {
-  const [_, error] = await safelyTry(() => axios.post(endpoint, data));
-  if (error) {
-    fs.writeFileSync(LOG_FILE, JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return false;
-  }
-  return true;
-};
-
-export const sendTestData = async (testData: VitestTestData) => {
-  const endpoint = getEndpoint('vitest');
-
-  console.log(`Your test time was ${testData.timeTaken.toFixed(2)}ms.`);
-
-  const sent = await sendData(endpoint, testData);
-  if (!sent) {
-    console.log(
-      `Your test data has not been sent. See logs in ${LOG_FILE} for more info.`,
-    );
-    return;
-  }
-
-  console.log(`Your test data has successfully been sent.`);
 };
