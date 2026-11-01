@@ -47,13 +47,17 @@ You don't have to use it. Anything that accepts an HTTP POST will do, if you wou
 
 The data is sent to the following default endpoints (customizable via environment variable):
 
-| Test Runner | Default                                       | Environment Variable Override | Format                                                  |
-| ----------- | --------------------------------------------- | ----------------------------- | ------------------------------------------------------- |
-| Jest        | "<http://compilation-metrics/jest>"           | BUILD_METRICS_ES_ENDPOINT     | JSON                                                    |
-| Playwright  | "<http://compilation-metrics/testdata/junit>" | BUILD_METRICS_ES_ENDPOINT     | `multipart/form-data`, metadata fields plus a JUnit XML |
-| Vitest      | "<http://compilation-metrics/vitest>"         | BUILD_METRICS_ES_ENDPOINT     | JSON                                                    |
+| Test Runner | Default                                   | Environment Variable Override | Format |
+| ----------- | ----------------------------------------- | ----------------------------- | ------ |
+| Jest        | "<http://compilation-metrics/jest>"       | BUILD_METRICS_ES_ENDPOINT     | JSON   |
+| Playwright  | "<http://compilation-metrics/playwright>" | PLAYWRIGHT_METRICS_ENDPOINT   | JSON   |
+| Vitest      | "<http://compilation-metrics/vitest>"     | VITEST_METRICS_ENDPOINT       | JSON   |
 
-`BUILD_METRICS_ES_ENDPOINT` is the same override the other libraries in the family use. It replaces the whole URL, not just the host.
+Each override replaces the whole URL, not just the host. Jest reads `BUILD_METRICS_ES_ENDPOINT`, the same override the other libraries in the family use. Vitest and Playwright read their own variable and ignore `BUILD_METRICS_ES_ENDPOINT`, because that one points at the .NET build endpoint wherever .NET builds report.
+
+| Environment Variable   | Read by            | Effect |
+| ---------------------- | ------------------ | ------ |
+| DEVFEEDBACK_TEST_TOKEN | Vitest, Playwright | Sent as the `X-DevFeedback-Token` header. Unset, empty or whitespace: no header. Never logged. |
 
 Pro tip: set up a CNAME on your internal DNS that points `compilation-metrics` at your DX Telemetry Manager deployment, and nobody has to configure anything. The same host name is the default for the other libraries in the family, so one DNS entry covers all of them.
 
