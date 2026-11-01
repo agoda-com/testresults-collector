@@ -1,16 +1,7 @@
 import type { PlaywrightTestConfig, ReporterDescription } from '@playwright/test';
 import { devices } from '@playwright/test';
-import * as path from 'path';
 // import dotenv from 'dotenv';
 
-const junit: ReporterDescription = [
-  'junit',
-  {
-    outputFile: process.env.PLAYWRIGHT_JUNIT_OUTPUT_NAME
-        ? path.join(__dirname,process.env.PLAYWRIGHT_JUNIT_OUTPUT_NAME)
-        : path.join(__dirname,'playwright-report/junit.results.xml')
-  }
-]
 const testMetrics: ReporterDescription = ['agoda-test-metrics/playwright']
 /**
  * Read environment variables from file.
@@ -63,7 +54,7 @@ const config: PlaywrightTestConfig = {
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? [
     ['html', { open: 'never',outputFolder:process.env.PLAYWRIGHT_HTML_REPORT? process.env.PLAYWRIGHT_HTML_REPORT: 'playwright-report/index.html' }],
-    junit,testMetrics ] : [['list'],junit,testMetrics],
+    testMetrics ] : [['list'],testMetrics],
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
