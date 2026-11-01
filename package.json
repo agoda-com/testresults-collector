@@ -30,7 +30,7 @@
   "peerDependencies": {
     "@playwright/test": ">=1.30.0",
     "jest": "24.x - 30.x",
-    "vitest": ">=0.32.0"
+    "vitest": ">=4.0.0"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {
