@@ -1,8 +1,49 @@
-import { getCommonMetadata, sendTestData } from './common';
+import { getCommonMetadata } from './common';
+import { postTestData, LOG_FILE } from '../common/transport';
 import { v1 as uuidv1 } from 'uuid';
-import type { Reporter, Vitest, Suite, Task } from 'vitest';
-import type { VitestTestFile, VitestTestCase, VitestTestData } from './types';
-import safelyTry from 'safely-try';
+import type { Reporter, Vitest, TestModule, TestCase } from 'vitest/node';
+import type { VitestStatus, VitestTestFile, VitestTestCase, VitestTestData } from './types';
+
+const testCaseStatus = (testCase: TestCase): VitestStatus => {
+  switch (testCase.result().state) {
+    case 'passed':
+      return 'pass';
+    case 'failed':
+      return 'fail';
+    case 'skipped':
+      return testCase.options.mode === 'todo' ? 'todo' : 'skip';
+    case 'pending':
+      return 'run';
+  }
+};
+
+const testModuleStatus = (testModule: TestModule): VitestStatus => {
+  switch (testModule.state()) {
+    case 'passed':
+      return 'pass';
+    case 'failed':
+      return 'fail';
+    case 'skipped':
+      return 'skip';
+    case 'pending':
+    case 'queued':
+      return 'run';
+  }
+};
+
+const toTestCase = (testCase: TestCase): VitestTestCase => {
+  const errors = testCase.result().errors ?? [];
+  const diagnostic = testCase.diagnostic();
+  return {
+    name: testCase.fullName,
+    status: testCaseStatus(testCase),
+    errorMessage: errors.length === 0 ? null : errors.map((e) => e.message),
+    // Tests that did not run (skipped, todo) have no diagnostic.
+    startTime: diagnostic?.startTime ?? 0,
+    duration: diagnostic?.duration ?? 0,
+    filename: testCase.module.relativeModuleId,
+  };
+};
 
 export default class VitestTestDataPlugin implements Reporter {
   private ctx!: Vitest;
@@ -12,72 +53,40 @@ export default class VitestTestDataPlugin implements Reporter {
     this.customIdentifier = customIdentifier;
   }
 
-  async onInit(ctx: Vitest) {
+  onInit(ctx: Vitest) {
     this.ctx = ctx;
   }
 
-  private getVitestVersion() {
-    const [version] = safelyTry(() => require('vitest/package.json').version as string);
-    return version;
-  }
-
-  private iterateVitestTasks(
-    filename: string,
-    prefix: string,
-    tasks: Task[],
-  ): VitestTestCase[] {
-    const testcases: VitestTestCase[] = [];
-
-    for (const task of tasks) {
-      if (task.type === 'test') {
-        const errors = task.result?.errors ?? [];
-        testcases.push({
-          name: `${prefix}${task.name}`,
-          status: task.result?.state ?? null,
-          startTime: task.result?.startTime ?? 0,
-          duration: task.result?.duration ?? 0,
-          errorMessage: errors.length === 0 ? null : errors.map((e) => e.message),
-          filename: filename,
-        });
-      } else {
-        const suite = task as Suite;
-        const newPrefix =
-          prefix.length > 0 ? `${prefix}${suite.name} > ` : `${suite.name} > `;
-        testcases.push(
-          ...this.iterateVitestTasks(filename, newPrefix, suite.tasks ?? []),
-        );
-      }
-    }
-
-    return testcases;
-  }
-
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onTestRunEnd(testModules: ReadonlyArray<TestModule>) {
     const config = this.ctx.config;
 
     const testfiles: VitestTestFile[] = [];
-    let testcases: VitestTestCase[] = [];
+    const testcases: VitestTestCase[] = [];
 
-    for (const file of files) {
+    for (const testModule of testModules) {
+      const diagnostic = testModule.diagnostic();
+      const moduleTestcases = Array.from(testModule.children.allTests(), toTestCase);
+      // The module API has no start time, so the module starts with its first test.
+      const startTimes = moduleTestcases.map((t) => t.startTime).filter((t) => t > 0);
+
       testfiles.push({
-        name: file.name,
-        collectDuration: file.collectDuration ?? null,
-        setupDuration: file.setupDuration ?? null,
-        prepareDuration: file.prepareDuration ?? null,
-        environmentLoad: file.environmentLoad ?? null,
-        status: file.result?.state ?? null,
-        startTime: file.result?.startTime ?? 0,
-        duration: file.result?.duration ?? 0,
+        name: testModule.relativeModuleId,
+        collectDuration: diagnostic.collectDuration,
+        setupDuration: diagnostic.setupDuration,
+        prepareDuration: diagnostic.prepareDuration,
+        environmentLoad: diagnostic.environmentSetupDuration,
+        status: testModuleStatus(testModule),
+        startTime: startTimes.length === 0 ? 0 : Math.min(...startTimes),
+        duration: diagnostic.duration,
       });
-
-      testcases.push(...this.iterateVitestTasks(file.name, '', file.tasks));
+      testcases.push(...moduleTestcases);
     }
 
-    const timeTaken = files.reduce((acc, file) => acc + (file.result?.duration ?? 0), 0);
+    const timeTaken = testfiles.reduce((acc, file) => acc + file.duration, 0);
     const testData: VitestTestData = {
       ...getCommonMetadata(timeTaken, this.customIdentifier),
       type: 'vitest',
-      vitestVersion: this.getVitestVersion() ?? null,
+      vitestVersion: this.ctx.version,
       mode: config.mode,
       maxConcurrency: config.maxConcurrency,
       watchMode: config.watch,
@@ -87,6 +96,12 @@ export default class VitestTestDataPlugin implements Reporter {
       testcases,
     };
 
-    sendTestData(testData);
+    console.log(`Your test time was ${timeTaken.toFixed(2)}ms.`);
+    const sent = await postTestData('vitest', testData);
+    if (sent) {
+      console.log('Your test data has successfully been sent.');
+    } else {
+      console.log(`Your test data has not been sent. See logs in ${LOG_FILE} for more info.`);
+    }
   }
 }
