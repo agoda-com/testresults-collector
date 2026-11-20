@@ -20,8 +20,8 @@ function publishJestMetrics(result: any) {
         timeout: 30000,
     }).then(_ => {
         console.log(`Jest Test results successfully posted to ${endpoint}`);
-    }).catch(error => {
-        console.error(`Failed posting Jest test Results to ${endpoint} from agoda-test-metrics`);
+    }).catch(() => {
+        console.warn(`[agoda-test-metrics] Warning: failed to upload Jest results to ${endpoint}`);
     });
     return result;
 }
