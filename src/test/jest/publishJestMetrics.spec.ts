@@ -1,4 +1,5 @@
 const publishJestMetrics = require('../../jest');
+import { setImmediate } from 'node:timers/promises';
 import axios from 'axios'
 import {mockedJestTestCaseSummary} from "../resources/mockedJestTestCaseSummary";
 import * as getMetadata from '../../common/getMetadata';
@@ -59,4 +60,23 @@ describe('publishJestMetrics', () => {
         const results = await publishJestMetrics(mockedJestTestCaseSummary);
         expect(results).toEqual(mockedJestTestCaseSummary)
     })
+
+    test('warns on a proxy 503 and returns the original Jest results', async () => {
+        axiosPostMock.mockRejectedValueOnce({ response: { status: 503 } });
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        try {
+            expect(publishJestMetrics(mockedJestTestCaseSummary)).toBe(mockedJestTestCaseSummary);
+            await setImmediate();
+
+            expect(warn).toHaveBeenCalledWith(
+                `[agoda-test-metrics] Warning: failed to upload Jest results to ${testEndpoint}`
+            );
+            expect(error).not.toHaveBeenCalled();
+        } finally {
+            warn.mockRestore();
+            error.mockRestore();
+        }
+    });
 });
